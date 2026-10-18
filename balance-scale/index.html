@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shape Balance Puzzles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one column — the clue scale on top, the child's own scale below */
+:root{
+  --bg:#EAF2F6; --card:#FFFFFF; --ink:#1D2938; --muted:#5B6C7E; --line:#CFDCE6;
+  --wood:#9B6440; --wood-dark:#7A4C2F; --metal:#7C8B99; --plate:#C8956C;
+  --accent:#2F6FD1; --accent-ink:#FFFFFF; --good:#1F9D5B; --warn:#C9741A;
+  --star:#F0B400; --circle:#2F7DE1; --square:#E4572E; --triangle:#24A36A; --heart:#D2479A;
+  --h0:#FFD54A; --h1:#8FCBFF; --h2:#A8E3A0; --h3:#F6AFCF;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111922; --card:#1A2430; --ink:#E7EDF3; --muted:#9BABBB; --line:#2D3B4B;
+  --wood:#C08458; --wood-dark:#9C6A44; --metal:#93A2B0; --plate:#B98763;
+  --accent:#6FA4F2; --accent-ink:#0E1620; --good:#4CC983; --warn:#F0A04B;
+  --star:#FFC928; --circle:#5A9BF0; --square:#F0714C; --triangle:#3CC184; --heart:#E866B0;
+  --h0:#8A6D10; --h1:#24507A; --h2:#2F6A35; --h3:#7A2E54; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111922; --card:#1A2430; --ink:#E7EDF3; --muted:#9BABBB; --line:#2D3B4B;
+  --wood:#C08458; --wood-dark:#9C6A44; --metal:#93A2B0; --plate:#B98763;
+  --accent:#6FA4F2; --accent-ink:#0E1620; --good:#4CC983; --warn:#F0A04B;
+  --star:#FFC928; --circle:#5A9BF0; --square:#F0714C; --triangle:#3CC184; --heart:#E866B0;
+  --h0:#8A6D10; --h1:#24507A; --h2:#2F6A35; --h3:#7A2E54; color-scheme:dark}
+
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.lvl{display:flex;border:2px solid var(--accent);border-radius:999px;overflow:hidden}
+.lvl button{font:800 16px var(--body);padding:8px 14px;min-height:40px;border:0;background:var(--card);color:var(--accent);cursor:pointer}
+.lvl button+button{border-left:2px solid var(--accent)}
+.lvl button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.pill{font:800 16px var(--body);padding:6px 14px;border-radius:999px;border:2px solid var(--line);background:var(--card);font-variant-numeric:tabular-nums}
+.pill.solved{border-color:var(--good);color:var(--good)}
+.nav{max-width:100%}
+.dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--ink);font:800 15px var(--body);cursor:pointer}
+.dot[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;width:100%;max-width:680px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 16px 18px;display:grid;gap:10px;position:relative;overflow:hidden;min-width:0}
+.card h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;display:flex;gap:10px;align-items:center}
+.step{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--card);font:800 16px var(--body)}
+svg.scale{width:100%;height:auto;display:block;max-width:100%}
+.item{cursor:default}
+.tap .item{cursor:pointer}
+.inner{transition:opacity .55s ease,transform .55s ease;transform-box:fill-box;transform-origin:center}
+.inner.gone{opacity:0;transform:translateY(-34px) scale(.3)}
+.halo{opacity:0;transition:opacity .35s}
+.grouped .halo{opacity:1}
+.say{min-height:3.2em;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-weight:800;font-size:19px;background:var(--bg);border-radius:14px;padding:10px 14px}
+.say svg{width:26px;height:26px;vertical-align:middle}
+.say .eq{font-family:var(--display);font-size:24px;color:var(--muted);padding:0 4px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button.btn{font:800 17px var(--body);border-radius:999px;padding:12px 20px;border:2px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer;min-height:48px}
+button.btn.ghost{background:transparent;color:var(--accent)}
+button.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.tray{display:flex;gap:10px;flex-wrap:wrap}
+.add{display:flex;align-items:center;gap:8px;font:800 18px var(--body);padding:10px 18px 10px 12px;border-radius:16px;border:2px dashed var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:58px}
+.add svg{width:38px;height:38px}
+.status{font-weight:800;font-size:19px;min-height:1.5em}
+.status.good{color:var(--good)}.status.warn{color:var(--warn)}
+.hint{color:var(--muted);font-size:15px;margin:0}
+.burst{position:absolute;pointer-events:none;width:26px;height:26px;animation:fly 1.1s ease-out forwards}
+@keyframes fly{to{transform:translate(var(--dx),var(--dy)) rotate(260deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.inner,.halo{transition:none}.burst{display:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Shape Balance</h1>
+      <p class="sub">Look at the clue, find what weighs the same, then make the second scale balance.</p>
+    </div>
+    <div class="nav"><div class="lvl" role="group" aria-label="Difficulty"><button type="button" data-l="easy">Easy</button><button type="button" data-l="medium">Medium</button><button type="button" data-l="hard">Hard</button></div><span class="pill" id="count">Puzzle 1</span><span class="pill solved" id="solved" aria-live="polite">Solved: 0</span></div>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2><span class="step">1</span>The clue</h2>
+      <svg class="scale" id="clueSvg" viewBox="-40 -10 500 300" role="img" aria-label="Clue balance scale"></svg>
+      <div class="say" id="clueSay"></div>
+      <div class="row">
+        <button class="btn" id="clueBtn" type="button">Take away the twins</button>
+        <button class="btn ghost" id="clueReset" type="button">Start clue again</button>
+      </div>
+    </section>
+
+    <section class="card" id="qCard">
+      <h2><span class="step">2</span>Your turn</h2>
+      <svg class="scale tap" id="qSvg" viewBox="-40 -10 500 300" role="img" aria-label="Your balance scale"></svg>
+      <div class="status" id="qStatus" aria-live="polite"></div>
+      <div class="tray" id="tray"></div>
+      <p class="hint">Tap a shape on the scale to take it off.</p>
+      <div class="row">
+        <button class="btn ghost" id="qClear" type="button">Clear</button>
+        <button class="btn ghost" id="qShow" type="button">Show answer</button>
+        <button class="btn" id="qNext" type="button">Next puzzle</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const FIRST={w:{star:3,circle:1,square:2},clue:{L:['star','circle','circle','circle','circle'],R:['square','square','star']},q:'circle',qn:2,tray:'square'};
+const SHAPES=['star','circle','square','triangle','heart'];
+const LEVELS={
+  easy:  {ratios:[[1,1],[2,1]],      ms:[1,2],   twins:[0,0,1], maxK:2, maxAns:4},
+  medium:{ratios:[[2,1],[3,1],[4,1]],ms:[1,2],   twins:[0,1,1], maxK:3, maxAns:8},
+  hard:  {ratios:[[3,1],[4,1],[3,2]],ms:[1,2,3], twins:[1,1,2], maxK:8, maxAns:8}};
+let level='medium';try{const v=localStorage.getItem('sb-level');if(LEVELS[v])level=v}catch(e){}
+const ri=n=>Math.floor(Math.random()*n);
+const pick=a=>a[ri(a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+// p of shape A weigh the same as q of shape B
+function makePuzzle(){
+  const Lv=LEVELS[level];
+  const [A,B,...rest]=shuffle([...SHAPES]);
+  let [p,q]=pick(Lv.ratios);if(Math.random()<.5)[p,q]=[q,p];
+  const w={[A]:q,[B]:p};
+  const ms=Lv.ms.filter(m=>p*m<=6&&q*m<=6),m=pick(ms.length?ms:[1]);
+  const nTw=pick(Lv.twins),twins=rest.slice(0,nTw);twins.forEach((t,i)=>w[t]=5+i);
+  let L=[...Array(p*m).fill(A),...twins],R=[...Array(q*m).fill(B),...twins];
+  shuffle(L);shuffle(R);if(Math.random()<.5)[L,R]=[R,L];
+  const X=Math.random()<.5?A:B,Y=X===A?B:A,xu=X===A?p:q,yu=X===A?q:p;
+  let ks=[1,2,3,4,5,6,7,8].filter(k=>k<=Lv.maxK&&xu*k<=8&&yu*k<=Lv.maxAns);if(!ks.length)ks=[1];
+  const other=ks.filter(k=>k!==m),k=pick(other.length?other:ks);
+  return {w,clue:{L,R},q:X,qn:xu*k,tray:Y};
+}
+const NAMES={star:['star','stars'],circle:['circle','circles'],square:['square','squares'],triangle:['triangle','triangles'],heart:['heart','hearts']};
+const nm=(t,n)=>n+' '+NAMES[t][n===1?0:1];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function starPts(r1,r2){let p=[];for(let i=0;i<10;i++){const r=i%2?r2:r1,a=-Math.PI/2+i*Math.PI/5;p.push((r*Math.cos(a)).toFixed(1)+','+(r*Math.sin(a)).toFixed(1))}return p.join(' ')}
+const STAR=starPts(17,7.5);
+function shape(t){
+  const f=`fill="var(--${t})" stroke="rgba(0,0,0,.18)" stroke-width="1.5"`;
+  if(t==='circle')return `<circle r="15" ${f}/>`;
+  if(t==='square')return `<rect x="-14" y="-14" width="28" height="28" rx="4" ${f}/>`;
+  if(t==='triangle')return `<polygon points="0,-15 16,13 -16,13" stroke-linejoin="round" ${f}/>`;
+  if(t==='heart')return `<path d="M0 14 C-22 0 -15 -19 0 -8 C15 -19 22 0 0 14Z" ${f}/>`;
+  return `<polygon points="${STAR}" stroke-linejoin="round" ${f}/>`;
+}
+const icon=t=>`<svg viewBox="-18 -18 36 36" aria-hidden="true">${shape(t)}</svg>`;
+
+const PX=210,PY=80,HALF=160,DROP=70;
+class Scale{
+  constructor(svg,w){this.svg=svg;this.w=w;this.L=[];this.R=[];this.angle=0;this.vel=0;this.onTap=null;this.build();
+    svg.addEventListener('click',e=>{const g=e.target.closest('.item');if(g&&this.onTap)this.onTap(g.dataset.side,+g.dataset.i)});}
+  build(){
+    const pan=s=>`<g id="${s}"><line x1="0" y1="0" x2="-74" y2="${DROP}" stroke="var(--metal)" stroke-width="2"/><line x1="0" y1="0" x2="74" y2="${DROP}" stroke="var(--metal)" stroke-width="2"/><circle r="5" fill="var(--metal)"/><g class="items"></g><path d="M-80 ${DROP} Q0 ${DROP+22} 80 ${DROP} Z" fill="var(--plate)" stroke="var(--wood-dark)" stroke-width="2"/></g>`;
+    this.svg.innerHTML=`<rect x="203" y="80" width="14" height="182" rx="5" fill="var(--metal)"/>
+      <rect x="140" y="258" width="140" height="18" rx="9" fill="var(--wood)"/>
+      <g class="beam"><rect x="${PX-HALF-8}" y="${PY-7}" width="${HALF*2+16}" height="14" rx="7" fill="var(--wood)"/></g>
+      ${pan('pL')}${pan('pR')}
+      <circle cx="${PX}" cy="${PY}" r="11" fill="var(--metal)" stroke="var(--card)" stroke-width="3"/>`;
+    this.beam=this.svg.querySelector('.beam');this.pL=this.svg.querySelector('#pL');this.pR=this.svg.querySelector('#pR');
+    this.svg.insertBefore(this.pL,this.svg.lastElementChild);this.svg.insertBefore(this.pR,this.svg.lastElementChild);
+    this.place();
+  }
+  weight(a){return a.reduce((s,t)=>s+this.w[t],0)}
+  diff(){return this.weight(this.R)-this.weight(this.L)}
+  target(){const d=this.diff();if(!d)return 0;return Math.sign(d)*Math.min(13,6+Math.abs(d)*1.5)}
+  render(groups){
+    for(const [side,arr] of [['L',this.L],['R',this.R]]){
+      const host=(side==='L'?this.pL:this.pR).querySelector('.items');
+      const n=arr.length;let h='';
+      arr.forEach((t,i)=>{const row=Math.floor(i/4),cnt=Math.min(4,n-row*4),col=i%4;
+        const x=(col-(cnt-1)/2)*36,y=DROP-19-row*36;
+        const g=groups?groups[side][i]:-1;
+        h+=`<g class="item" data-side="${side}" data-i="${i}" transform="translate(${x} ${y})"><g class="inner">${g>=0?`<circle class="halo" r="19" fill="var(--h${g%4})"/>`:''}${shape(t)}</g></g>`});
+      host.innerHTML=h;
+    }
+    this.svg.classList.toggle('grouped',!!groups);
+  }
+  place(){
+    const a=this.angle*Math.PI/180,c=Math.cos(a)*HALF,s=Math.sin(a)*HALF;
+    this.beam.setAttribute('transform',`rotate(${this.angle.toFixed(2)} ${PX} ${PY})`);
+    this.pL.setAttribute('transform',`translate(${(PX-c).toFixed(1)} ${(PY-s).toFixed(1)})`);
+    this.pR.setAttribute('transform',`translate(${(PX+c).toFixed(1)} ${(PY+s).toFixed(1)})`);
+  }
+  step(){const t=this.target();if(reduce){this.angle=t;this.vel=0}else{this.vel+=(t-this.angle)*.07;this.vel*=.8;this.angle+=this.vel}this.place()}
+}
+
+const clue=new Scale(document.getElementById('clueSvg'),{});
+const q=new Scale(document.getElementById('qSvg'),{});
+(function loop(){clue.step();q.step();requestAnimationFrame(loop)})();
+
+let P=FIRST,count=1,solvedCount=0,peeked=false;
+let stage=0,solved=false;
+const $=id=>document.getElementById(id);
+
+function twinsOf(L,R){const c={};for(const t of new Set(L))if(R.includes(t))c[t]=Math.min(L.filter(x=>x===t).length,R.filter(x=>x===t).length);return c}
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function sideRun(arr){return {t:arr[0],n:arr.length}}
+function strip(a,an,b,bn,lead){return `${lead?`<span>${lead}</span>`:''}${icon(a).repeat(an)}<span class="eq">=</span>${icon(b).repeat(bn)}<span>${nm(a,an)} weigh the same as ${nm(b,bn)}</span>`}
+
+function loadClue(){
+  const p=P;clue.w=p.w;clue.L=[...p.clue.L];clue.R=[...p.clue.R];clue.render(null);
+  const tw=twinsOf(clue.L,clue.R);stage=Object.keys(tw).length?0:1;
+  if(stage===0){$('clueSay').innerHTML='The scale is level, so both sides weigh the same. Do you see a shape on both sides?';$('clueBtn').textContent='Take away the twins'}
+  else{const l=sideRun(clue.L),r=sideRun(clue.R);$('clueSay').innerHTML=strip(l.t,l.n,r.t,r.n);$('clueBtn').textContent='Make matching groups'}
+  $('clueBtn').disabled=false;
+}
+$('clueBtn').onclick=()=>{
+  if(stage===0){
+    const tw=twinsOf(clue.L,clue.R),mark={L:new Set(),R:new Set()};
+    for(const t in tw)for(const s of ['L','R']){let k=tw[t];clue[s].forEach((x,i)=>{if(x===t&&k>0){mark[s].add(i);k--}})}
+    clue.svg.querySelectorAll('.item').forEach(g=>{if(mark[g.dataset.side].has(+g.dataset.i))g.firstElementChild.classList.add('gone')});
+    $('clueBtn').disabled=true;
+    const names=Object.keys(tw).map(t=>NAMES[t][1]).join(' and ');
+    $('clueSay').innerHTML=`Take the ${names} off both sides. Still level!`;
+    setTimeout(()=>{
+      clue.L=clue.L.filter((_,i)=>!mark.L.has(i));clue.R=clue.R.filter((_,i)=>!mark.R.has(i));clue.render(null);
+      const l=sideRun(clue.L),r=sideRun(clue.R);$('clueSay').innerHTML=strip(l.t,l.n,r.t,r.n,'So');
+      stage=1;$('clueBtn').textContent='Make matching groups';$('clueBtn').disabled=false;
+    },reduce?50:700);
+  }else if(stage===1){
+    const l=sideRun(clue.L),r=sideRun(clue.R),g=gcd(l.n,r.n),a=l.n/g,b=r.n/g;
+    clue.render({L:clue.L.map((_,i)=>Math.floor(i/a)),R:clue.R.map((_,i)=>Math.floor(i/b))});
+    $('clueSay').innerHTML=g>1?strip(l.t,a,r.t,b,'Same colors match, so'):strip(l.t,a,r.t,b,'One group each:');
+    stage=2;$('clueBtn').disabled=true;
+  }
+};
+$('clueReset').onclick=loadClue;
+
+function loadQ(){
+  const p=P;q.w=p.w;q.L=Array(p.qn).fill(p.q);q.R=[];solved=false;peeked=false;q.render(null);
+  $('tray').innerHTML=`<button class="add" type="button" id="addBtn">${icon(p.tray)}Add a ${p.tray}</button>`;
+  $('addBtn').onclick=()=>{if(q.R.length<8){q.R.push(p.tray);q.render(null);update()}};
+  update();
+}
+q.onTap=(side,i)=>{if(side==='R'){q.R.splice(i,1);q.render(null);update()}};
+function update(){
+  const d=q.diff(),s=$('qStatus');s.className='status';
+  if(!q.R.length){s.textContent='What makes this side match? Add shapes.';}
+  else if(d<0){s.textContent='Still too light. Add another.';s.classList.add('warn')}
+  else if(d>0){s.textContent='Too heavy! Tap one to take it off.';s.classList.add('warn')}
+  else{s.textContent=`Balanced! ${nm(P.q,q.L.length)} = ${nm(P.tray,q.R.length)}`;s.classList.add('good');if(!solved){solved=true;if(!peeked){solvedCount++;showCount()}burst()}}
+  if(d!==0)solved=false;
+}
+function burst(){
+  if(reduce)return;const card=$('qCard'),types=Object.keys(P.w);
+  for(let i=0;i<14;i++){const el=document.createElement('div');el.className='burst';el.innerHTML=icon(types[i%types.length]);
+    el.style.left=(card.clientWidth*(.3+Math.random()*.4))+'px';el.style.top=(card.clientHeight*.4)+'px';
+    el.style.setProperty('--dx',(Math.random()*260-130)+'px');el.style.setProperty('--dy',(-80-Math.random()*160)+'px');
+    card.appendChild(el);setTimeout(()=>el.remove(),1200)}
+}
+$('qClear').onclick=()=>{q.R=[];q.render(null);update()};
+$('qShow').onclick=()=>{const p=P;peeked=true;q.R=Array(q.weight(q.L)/p.w[p.tray]).fill(p.tray);q.render(null);update()};
+function newPuzzle(){const old=JSON.stringify(P);do{P=makePuzzle()}while(JSON.stringify(P)===old);count++;start()}
+$('qNext').onclick=newPuzzle;
+function showLevel(){document.querySelectorAll('.lvl button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===level))}
+document.querySelectorAll('.lvl button').forEach(b=>b.onclick=()=>{if(b.dataset.l===level)return;level=b.dataset.l;try{localStorage.setItem('sb-level',level)}catch(e){}showLevel();newPuzzle()});
+showLevel();
+
+function showCount(){$('count').textContent=`Puzzle ${count}`;$('solved').textContent=`Solved: ${solvedCount}`}
+function start(){showCount();loadClue();loadQ();window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+showCount();loadClue();loadQ();
+</script>
+</body>
+</html>
