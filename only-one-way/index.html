@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Only One Way?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one step per screen, a workbook card with a hands-on toy on the left and the number sentence on the right */
+:root{
+  --bg:#EAF2F7; --card:#FFFFFF; --ink:#1B2B38; --muted:#5A6E7E; --line:#C9D8E3;
+  --blue:#2F7FD1; --orange:#F08A24; --less:#2E9E6A; --equal:#D99A00; --more:#D2483F;
+  --less-soft:#DDF3E7; --equal-soft:#FFF2C9; --more-soft:#FBE1DE; --blue-soft:#DCEBFA;
+  --display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Nunito", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --less:#4CC28A; --equal:#F0B830; --more:#F06A60;
+  --less-soft:#163828; --equal-soft:#3A3010; --more-soft:#3D1D1A; --blue-soft:#17304A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --less:#4CC28A; --equal:#F0B830; --more:#F06A60;
+  --less-soft:#163828; --equal-soft:#3A3010; --more-soft:#3D1D1A; --blue-soft:#17304A; color-scheme:dark}
+body{margin:0;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:18px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+.app{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:30px;margin:0;line-height:1}
+h1 span{color:var(--orange)}
+h2{font-family:var(--display);font-weight:800;font-size:28px;margin:0;line-height:1.1;text-wrap:balance}
+button{font-family:var(--display);font-weight:600;cursor:pointer;border:none;color:inherit}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.say{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:17px}
+.say svg{width:20px;height:20px}
+.steps{display:flex;gap:6px}
+.steps button{flex:1;min-width:0;background:var(--card);border:2px solid var(--line);border-radius:10px;padding:6px 4px;font-size:14px;color:var(--muted);line-height:1.1}
+.steps button b{display:block;font-size:20px}
+.steps button.on{border-color:var(--blue);color:var(--ink);background:var(--blue-soft)}
+.steps button.done b{color:var(--less)}
+main{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:16px;min-height:420px}
+.lead{margin:0;color:var(--muted);max-width:60ch}
+.play{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+.side{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+.sentence{font-family:var(--display);font-weight:800;font-size:40px;line-height:1.1;font-variant-numeric:tabular-nums}
+.sentence .blank{color:var(--orange)}
+.verdict{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:26px;padding:4px 16px;border-radius:12px}
+.v-less{background:var(--less-soft);color:var(--less)} .v-equal{background:var(--equal-soft);color:var(--equal)} .v-more{background:var(--more-soft);color:var(--more)}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.big{font-size:30px;width:64px;height:64px;border-radius:16px;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.big:disabled{opacity:.35;cursor:default}
+.msg{font-weight:800;min-height:3em;max-width:46ch}
+/* tower */
+.tower{position:relative;width:96px;height:372px;flex:none;border-bottom:4px solid var(--ink);margin-left:52px}
+.stack{position:absolute;inset:auto 0 0 0;display:flex;flex-direction:column-reverse;gap:4px;align-items:center}
+.blk{width:64px;height:26px;border-radius:6px;background:var(--blue);transition:transform .2s,opacity .2s}
+.blk.add{background:var(--orange);animation:pop .25s}
+.blk.gone{background:transparent;border:2px dashed var(--muted);opacity:.6}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.target{position:absolute;left:-52px;right:-8px;border-top:3px dashed var(--equal);bottom:268px}
+.target span{position:absolute;left:0;top:-26px;font-family:var(--display);font-weight:800;color:var(--equal);font-size:18px}
+.tick{position:absolute;left:-30px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* chips */
+.tried{display:flex;flex-direction:column;gap:6px}
+.label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:34px}
+.chip{font-family:var(--display);font-weight:600;padding:2px 12px;border-radius:999px;font-size:18px;font-variant-numeric:tabular-nums}
+/* number line */
+.nl{width:100%;overflow-x:auto}
+.nl svg{display:block;width:100%;min-width:340px;height:auto}
+.hops{display:flex;flex-wrap:wrap;gap:8px}
+.hops button{width:52px;height:52px;border-radius:14px;font-size:24px;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.hops button.used{background:var(--card)}
+.buckets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bucket{border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.bucket b{font-family:var(--display);font-size:18px}
+.bucket span{font-family:var(--display);font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;min-height:1.3em}
+/* table */
+.tbl{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0 6px;width:100%;font-variant-numeric:tabular-nums}
+th{font-family:var(--display);font-size:18px;padding:4px 8px;text-align:center}
+td{padding:0;text-align:center}
+td button,td .cell{width:100%;min-height:44px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:22px;border-radius:10px}
+td button{background:var(--blue-soft);border:2px dashed var(--blue);color:var(--blue);font-size:18px}
+td .cell.hit{font-size:26px}
+td .cell.miss{color:var(--line)}
+/* quiz */
+.qcard{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.choice{display:flex;gap:10px;flex-wrap:wrap}
+.choice button{font-size:20px;padding:10px 18px;border-radius:14px;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.choice button.picked{background:var(--blue);color:var(--card)}
+.answers{display:flex;flex-wrap:wrap;gap:6px}
+.score{font-family:var(--display);font-weight:800;color:var(--muted)}
+.tip{background:var(--equal-soft);border-radius:12px;padding:10px 14px;font-weight:700;max-width:60ch}
+.pad{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;width:100%;max-width:420px}
+.pad button{height:52px;border-radius:12px;font-size:24px;font-weight:800;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.pad button.picked{background:var(--orange);border-color:var(--orange);color:#fff}
+.go{font-size:20px;padding:10px 26px;border-radius:14px;background:var(--blue);color:#fff}
+.go:disabled{opacity:.35;cursor:default}
+.circled{border:4px solid var(--orange);border-radius:999px;padding:4px 22px;animation:pop .3s}
+footer{display:flex;justify-content:space-between;gap:12px}
+footer button{font-size:20px;padding:10px 22px;border-radius:14px;background:var(--card);border:2px solid var(--line)}
+footer button.next{background:var(--blue);border-color:var(--blue);color:#fff}
+footer button:disabled{opacity:.3;cursor:default}
+@media (max-width:520px){
+  .sentence{font-size:32px} h2{font-size:24px} main{padding:16px}
+  .tower{margin-left:40px;width:80px} .blk{width:54px}
+  .steps button{font-size:0} .steps button b{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Only <span>One</span> Way?</h1>
+    <button class="say" id="say" aria-label="Read this step out loud">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>
+      Read to me
+    </button>
+  </header>
+  <nav class="steps" id="steps" aria-label="Steps"></nav>
+  <main id="stage" aria-live="polite"></main>
+  <footer>
+    <button id="back">Back</button>
+    <button id="next" class="next">Next</button>
+  </footer>
+</div>
+
+<script>
+const REL = {less:{sym:'<',word:'less than',cls:'v-less',soft:'var(--less-soft)',fg:'var(--less)'},
+             equal:{sym:'=',word:'equal to',cls:'v-equal',soft:'var(--equal-soft)',fg:'var(--equal)'},
+             more:{sym:'>',word:'more than',cls:'v-more',soft:'var(--more-soft)',fg:'var(--more)'}};
+const rel = (a,b) => a<b?'less':a===b?'equal':'more';
+const $ = s => document.querySelector(s);
+const chip = (txt,r) => `<span class="chip" style="background:${REL[r].soft};color:${REL[r].fg}">${txt}</span>`;
+
+function speak(t){
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.rate=.9; speechSynthesis.speak(u);}catch(e){}
+}
+
+/* tower drawing: blue fixed blocks, orange added blocks, dashed removed blocks */
+function towerHTML(blue, orange, gone){
+  let b='';
+  for(let i=0;i<blue;i++) b+=`<div class="blk"></div>`;
+  for(let i=0;i<orange;i++) b+=`<div class="blk add"></div>`;
+  for(let i=0;i<gone;i++) b+=`<div class="blk gone"></div>`;
+  let ticks='';
+  for(let i=1;i<=12;i++) ticks+=`<div class="tick" style="bottom:${(i-1)*30+6}px">${i}</div>`;
+  return `${ticks}<div class="target"><span>9</span></div><div class="stack">${b}</div>`;
+}
+
+/* ---------- STEP 1: make exactly 9 ---------- */
+const s1 = {add:0, tried:{}};
+function step1(el){
+  el.innerHTML = `<h2>Make exactly 9</h2>
+  <p class="lead">There are 6 blue blocks. Add orange blocks. Can you make the tower reach the line exactly?</p>
+  <div class="play"><div class="tower" id="t"></div>
+    <div class="side"><div class="sentence" id="sen"></div><div id="ver"></div>
+      <div class="btns"><button class="big" id="mn" aria-label="Take one away">−</button><button class="big" id="pl" aria-label="Add one">+</button></div>
+      <div class="msg" id="msg"></div></div></div>
+  <div class="tried"><span class="label">Numbers you tried</span><div class="chips" id="chips"></div></div>`;
+  const draw = () => {
+    const sum = 6+s1.add, r = rel(sum,9);
+    s1.tried[s1.add]=r;
+    $('#t').innerHTML = towerHTML(6, s1.add, 0);
+    $('#sen').innerHTML = `6 + <span class="blank">${s1.add}</span> = ${sum}`;
+    $('#ver').innerHTML = `<span class="verdict ${REL[r].cls}">${sum} ${REL[r].sym} 9</span>`;
+    $('#mn').disabled = s1.add===0; $('#pl').disabled = s1.add===6;
+    $('#chips').innerHTML = Object.keys(s1.tried).sort((a,b)=>a-b).map(k=>chip(k,s1.tried[k])).join('');
+    const n = Object.keys(s1.tried).length;
+    $('#msg').textContent = n>=6 ? 'You checked lots of numbers. Only 3 makes exactly 9. There is only one way!'
+      : r==='equal' ? 'Exactly 9! Is there another number that makes exactly 9? Keep trying.'
+      : r==='less' ? 'Too short. That is less than 9.' : 'Too tall. That is more than 9.';
+  };
+  el.querySelector('#pl').onclick=()=>{s1.add++;draw()};
+  el.querySelector('#mn').onclick=()=>{s1.add--;draw()};
+  draw();
+  return 'We have 6 blue blocks. Add orange blocks. Can you make the tower reach the line exactly? Try other numbers too.';
+}
+
+/* ---------- STEP 2: hop past the wall ---------- */
+const s2 = {last:null, found:{}};
+function step2(el){
+  el.innerHTML = `<h2>Hop to the wall</h2>
+  <p class="lead">The frog starts on 6. The wall is at 9. Pick how many hops. Where does it land?</p>
+  <div class="nl"><svg id="nl" viewBox="0 0 360 130" role="img" aria-label="Number line from 0 to 12 with a wall at 9"></svg></div>
+  <div class="sentence" id="sen" style="font-size:32px"></div>
+  <div class="hops" id="hops"></div>
+  <div class="buckets">
+    <div class="bucket v-less"><b>Before the wall</b><span id="bl"></span></div>
+    <div class="bucket v-equal"><b>On the wall</b><span id="be"></span></div>
+    <div class="bucket v-more"><b>Past the wall</b><span id="bm"></span></div>
+  </div>
+  <div class="msg" id="msg"></div>`;
+  const X = i => 20 + i*26.5;
+  const draw = () => {
+    let s = `<line x1="${X(0)-8}" y1="100" x2="${X(12)+8}" y2="100" stroke="var(--ink)" stroke-width="3"/>`;
+    for(let i=0;i<=12;i++){
+      s += `<line x1="${X(i)}" y1="93" x2="${X(i)}" y2="107" stroke="var(--ink)" stroke-width="2"/>
+            <text x="${X(i)}" y="126" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="15" fill="${i===9?'var(--equal)':i===6?'var(--blue)':'var(--muted)'}">${i}</text>`;
+    }
+    s += `<rect x="${X(9)-5}" y="30" width="10" height="62" rx="3" fill="var(--equal)"/><text x="${X(9)}" y="22" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="14" fill="var(--equal)">wall</text>`;
+    for(const k in s2.found){ const land=6+ +k, r=s2.found[k];
+      s += `<circle cx="${X(land)}" cy="100" r="7" fill="${REL[r].fg}"/>`; }
+    const n = s2.last ?? 0, land = 6+n;
+    for(let h=0;h<n;h++){ const a=X(6+h), b=X(7+h);
+      s += `<path d="M${a} 90 Q${(a+b)/2} 58 ${b} 90" fill="none" stroke="var(--orange)" stroke-width="2.5" stroke-dasharray="4 3"/>`; }
+    s += `<g><circle cx="${X(land)}" cy="78" r="11" fill="var(--less)"/><circle cx="${X(land)-4}" cy="73" r="3" fill="var(--card)"/><circle cx="${X(land)+4}" cy="73" r="3" fill="var(--card)"/><circle cx="${X(land)-4}" cy="73" r="1.4" fill="var(--ink)"/><circle cx="${X(land)+4}" cy="73" r="1.4" fill="var(--ink)"/></g>`;
+    $('#nl').innerHTML = s;
+    if(s2.last===null){ $('#sen').innerHTML = `6 + <span class="blank">?</span>`; }
+    else { const r=rel(land,9); $('#sen').innerHTML = `6 + <span class="blank">${n}</span> = ${land} <span class="verdict ${REL[r].cls}" style="vertical-align:middle">${land} ${REL[r].sym} 9</span>`; }
+    let h='';
+    for(let i=0;i<=6;i++) h+=`<button data-n="${i}" class="${i in s2.found?'used':''}" aria-label="${i} hops">${i}</button>`;
+    $('#hops').innerHTML = h;
+    $('#hops').querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=+b.dataset.n; s2.last=k; s2.found[k]=rel(6+k,9); draw();});
+    const pick = r => Object.keys(s2.found).filter(k=>s2.found[k]===r).sort((a,b)=>a-b).join(', ');
+    $('#bl').textContent = pick('less'); $('#be').textContent = pick('equal'); $('#bm').textContent = pick('more');
+    const n2 = Object.keys(s2.found).length;
+    $('#msg').textContent = n2===7 ? 'Lots of numbers land before the wall (0, 1, 2). Lots land past it (4, 5, 6 and more!). Only 3 lands right on the wall.'
+      : n2===0 ? 'Tap a number to make the frog hop.' : 'Try all the numbers. Which box has only one number?';
+  };
+  draw();
+  return 'The frog starts on 6. The wall is at 9. Pick how many hops. Does it land before the wall, on the wall, or past the wall? Try all the numbers.';
+}
+
+/* ---------- STEP 3: check every number ---------- */
+const s3 = {shown:{}};
+function step3(el){
+  el.innerHTML = `<h2>Check every number</h2>
+  <p class="lead">Tap each row to work it out. Each answer lights up in one box: less than 9, equal to 9, or more than 9.</p>
+  <div class="tbl"><table><thead><tr><th>6 + ?</th><th style="color:var(--less)">&lt; 9</th><th style="color:var(--equal)">= 9</th><th style="color:var(--more)">&gt; 9</th></tr></thead><tbody id="tb"></tbody></table></div>
+  <div class="msg" id="msg"></div>`;
+  const draw = () => {
+    let h='';
+    for(let n=0;n<=6;n++){
+      const s=6+n, r=rel(s,9);
+      if(!s3.shown[n]){ h+=`<tr><td style="width:28%"><div class="cell">6 + ${n}</div></td><td colspan="3"><button data-n="${n}">Tap to check</button></td></tr>`; continue; }
+      h+=`<tr><td style="width:28%"><div class="cell">6 + ${n}</div></td>`+
+        ['less','equal','more'].map(c=> c===r ? `<td><div class="cell hit ${REL[c].cls}">${s}</div></td>` : `<td><div class="cell miss">·</div></td>`).join('')+`</tr>`;
+    }
+    $('#tb').innerHTML=h;
+    $('#tb').querySelectorAll('button').forEach(b=>b.onclick=()=>{s3.shown[b.dataset.n]=1; draw();});
+    const done = Object.keys(s3.shown).length===7;
+    $('#msg').innerHTML = done ? `Look at the boxes! <span style="color:var(--less)">Less than 9</span> has 3 answers. <span style="color:var(--more)">More than 9</span> has lots. <span style="color:var(--equal)">Equal to 9</span> has <u>only one</u>.` : '';
+  };
+  draw();
+  return 'Tap each row to check it. Which box gets only one answer?';
+}
+
+/* ---------- STEP 4: taking away ---------- */
+const s4 = {take:0, tried:{}};
+function step4(el){
+  el.innerHTML = `<h2>Now take away</h2>
+  <p class="lead">Start with 10 blocks. Take some away. Taking away more makes the tower smaller.</p>
+  <div class="play"><div class="tower" id="t"></div>
+    <div class="side"><div class="sentence" id="sen"></div><div id="ver"></div>
+      <div class="btns"><button class="big" id="mn" aria-label="Put one back">−</button><button class="big" id="pl" aria-label="Take one away">+</button></div>
+      <div class="msg" id="msg"></div></div></div>
+  <div class="tried"><span class="label">Numbers you took away</span><div class="chips" id="chips"></div></div>`;
+  const draw = () => {
+    const left=10-s4.take, r=rel(left,9);
+    s4.tried[s4.take]=r;
+    $('#t').innerHTML = towerHTML(left,0,s4.take);
+    $('#sen').innerHTML = `10 − <span class="blank">${s4.take}</span> = ${left}`;
+    $('#ver').innerHTML = `<span class="verdict ${REL[r].cls}">${left} ${REL[r].sym} 9</span>`;
+    $('#mn').disabled = s4.take===0; $('#pl').disabled = s4.take===7;
+    $('#chips').innerHTML = Object.keys(s4.tried).sort((a,b)=>a-b).map(k=>chip(k,s4.tried[k])).join('');
+    $('#msg').textContent = r==='more' ? 'Still taller than 9! This only happens when you take away 0. Only one way!'
+      : r==='equal' ? 'Take away 1 and you get exactly 9. Only 1 works.'
+      : 'Less than 9. Take away 2, 3, 4 or more and it is always less. Lots of ways!';
+  };
+  el.querySelector('#pl').onclick=()=>{s4.take++;draw()};
+  el.querySelector('#mn').onclick=()=>{s4.take--;draw()};
+  draw();
+  return 'Start with 10 blocks. Tap plus to take blocks away. When is the tower more than 9? When is it exactly 9? When is it less than 9?';
+}
+
+/* ---------- STEP 5: only one way? quiz ---------- */
+const QS = [
+  {a:6,op:'+',r:'<'},{a:6,op:'+',r:'='},{a:6,op:'+',r:'>'},
+  {a:10,op:'−',r:'='},{a:10,op:'−',r:'<'},{a:10,op:'−',r:'>'},
+  {a:5,op:'+',r:'=',t:8},{a:7,op:'+',r:'<',t:8},{a:8,op:'−',r:'>',t:7},{a:4,op:'+',r:'>',t:6}
+];
+const s5 = {i:0, pick:null, checked:false, right:0, done:{}};
+function solve(q){
+  const t=q.t??9, out=[];
+  for(let n=0;n<=10;n++){
+    const v = q.op==='+'? q.a+n : q.a-n; if(v<0) continue;
+    if((q.r==='<'&&v<t)||(q.r==='='&&v===t)||(q.r==='>'&&v>t)) out.push(n);
+  }
+  const open = q.op==='+' && q.r==='>';
+  return {list:out, one: out.length===1 && !open, open};
+}
+function step5(el){
+  const q=QS[s5.i], t=q.t??9, sol=solve(q);
+  const rk = q.r==='<'?'less':q.r==='='?'equal':'more';
+  el.innerHTML = `<h2>Only one way?</h2>
+  <p class="lead">Read the puzzle. Is there only one number that works, or lots?</p>
+  <div class="qcard">
+    <div class="score">Puzzle ${s5.i+1} of ${QS.length} · ${s5.right} right</div>
+    <div class="sentence">${q.a} ${q.op} <span class="blank">__</span> ${q.r} ${t}</div>
+    <div class="choice"><button data-c="one">Only one way</button><button data-c="lots">Lots of ways</button></div>
+    <div id="fb"></div>
+  </div>`;
+  const fb = el.querySelector('#fb');
+  el.querySelectorAll('.choice button').forEach(b=>{
+    if(s5.pick===b.dataset.c) b.classList.add('picked');
+    b.onclick=()=>{ if(s5.checked) return; s5.pick=b.dataset.c; s5.checked=true;
+      const ok = (s5.pick==='one')===sol.one; if(ok){s5.right++;} s5.done[s5.i]=ok; render(); };
+  });
+  if(s5.checked){
+    const ok = s5.done[s5.i];
+    const ans = sol.list.map(n=>chip(n, 'equal')).join('') + (sol.open?chip('and more…','equal'):'');
+    const why = sol.one ? `Only <b>${sol.list[0]}</b> works.` : `All of these work.`;
+    const hint = (q.op==='−'&&q.r==='>') ? ' Taking away makes it smaller, so you can only take away 0!' :
+                 (q.op==='+'&&q.r==='<'&&sol.one) ? ' Adding makes it bigger, so you can only add 0!' : '';
+    fb.innerHTML = `<div class="msg" style="color:${ok?'var(--less)':'var(--more)'}">${ok?'Yes!':'Not quite.'} ${why}${hint}</div>
+      <div class="answers">${ans}</div>
+      ${s5.i<QS.length-1?'<button class="big" id="nq" style="width:auto;padding:0 20px;font-size:20px;margin-top:10px">Next puzzle</button>':`<p class="tip">All done! ${s5.right} of ${QS.length} right. Remember: <b>=</b> usually has one answer. <b>&lt;</b> and <b>&gt;</b> usually have lots. Watch out for the sneaky ones!</p><button class="big" id="again" style="width:auto;padding:0 20px;font-size:20px">Play again</button>`}`;
+    const nq=fb.querySelector('#nq'); if(nq) nq.onclick=()=>{s5.i++; s5.pick=null; s5.checked=false; render();};
+    const ag=fb.querySelector('#again'); if(ag) ag.onclick=()=>{Object.assign(s5,{i:0,pick:null,checked:false,right:0,done:{}}); render();};
+  }
+  const words = {'<':'is less than','=':'equals','>':'is more than'}[q.r];
+  return `${q.a} ${q.op==='+'?'plus':'minus'} blank ${words} ${t}. Is there only one number that works, or lots of numbers?`;
+}
+
+/* ---------- STEP 6: solve it yourself ---------- */
+const rnd = n => Math.floor(Math.random()*n);
+function fits(q,n){ const v=q.op==='+'?q.a+n:q.a-n; if(v<0) return null;
+  return (q.r==='<'&&v<q.t)||(q.r==='='&&v===q.t)||(q.r==='>'&&v>q.t) ? v : false; }
+function makeRound(){
+  const qs=[];
+  const add = q => { if(solve(q).list.length) qs.push(q); };
+  // two "equal" puzzles
+  { const a=2+rnd(6); add({a,op:'+',r:'=',t:a+1+rnd(10-a)}); }
+  { const a=6+rnd(5); add({a,op:'−',r:'=',t:rnd(a)}); }
+  // two sneaky one-answer puzzles
+  { const a=3+rnd(6); add({a,op:'+',r:'<',t:a+1}); }
+  { const a=6+rnd(5); add({a,op:'−',r:'>',t:a-1}); }
+  // four "lots of ways" puzzles
+  while(qs.length<8){
+    const op=rnd(2)?'+':'−', r=rnd(2)?'<':'>';
+    let a,t; if(op==='+'){a=2+rnd(6); t=a+2+rnd(9-a);} else {a=7+rnd(4); t=2+rnd(a-3);}
+    const q={a,op,r,t}; const s=solve(q); if(s.open||s.list.length>1) qs.push(q);
+  }
+  for(let i=qs.length-1;i>0;i--){const j=rnd(i+1);[qs[i],qs[j]]=[qs[j],qs[i]];}
+  return qs;
+}
+const s6 = {qs:makeRound(), i:0, val:null, phase:'pick', wrong:'', pts:0};
+function step6(el){
+  const q=s6.qs[s6.i], sol=solve(q);
+  const blank = s6.val===null ? '__' : s6.val;
+  const circled = s6.phase==='done' && sol.one;
+  el.innerHTML = `<h2>Your turn to solve</h2>
+  <p class="lead">Pick a number that makes it true. Then decide: should you circle it because only one number works?</p>
+  <div class="qcard">
+    <div class="score">Puzzle ${s6.i+1} of ${s6.qs.length} · ${s6.pts} points</div>
+    <div class="sentence ${circled?'circled':''}">${q.a} ${q.op} <span class="blank">${blank}</span> ${q.r} ${q.t}</div>
+    <div id="body6" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;width:100%"></div>
+  </div>`;
+  const body = el.querySelector('#body6');
+  if(s6.phase==='pick'){
+    let pad='<div class="pad">'; for(let n=0;n<=10;n++) pad+=`<button data-n="${n}" class="${s6.val===n?'picked':''}" aria-label="${n}">${n}</button>`; pad+='</div>';
+    body.innerHTML = pad + `<button class="go" id="chk" ${s6.val===null?'disabled':''}>Check</button><div class="msg" style="color:var(--more)">${s6.wrong}</div>`;
+    body.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{s6.val=+b.dataset.n; s6.wrong=''; render();});
+    body.querySelector('#chk').onclick=()=>{
+      const v=fits(q,s6.val), raw=q.op==='+'?q.a+s6.val:q.a-s6.val;
+      if(v===null){ s6.wrong=`You can't take ${s6.val} away from ${q.a}. Try a smaller number.`; }
+      else if(v===false){ const r=rel(raw,q.t);
+        s6.wrong=`${q.a} ${q.op} ${s6.val} = ${raw}, and ${raw} is ${REL[r].word} ${q.t}. Try again!`; }
+      else { s6.pts++; s6.phase='ask'; s6.wrong=''; }
+      render();
+    };
+  } else if(s6.phase==='ask'){
+    const raw=q.op==='+'?q.a+s6.val:q.a-s6.val;
+    body.innerHTML = `<div class="msg" style="color:var(--less)">Yes! ${q.a} ${q.op} ${s6.val} = ${raw}. That works.</div>
+      <div style="font-weight:800">Can any other number go in the blank?</div>
+      <div class="choice"><button data-c="one">No, circle it! Only one way</button><button data-c="lots">Yes, others work too</button></div>`;
+    body.querySelectorAll('.choice button').forEach(b=>b.onclick=()=>{
+      s6.oneOk = (b.dataset.c==='one')===sol.one; if(s6.oneOk) s6.pts++; s6.phase='done'; render(); });
+  } else {
+    const ans = sol.list.map(n=>chip(n,'equal')).join('') + (sol.open?chip('and more…','equal'):'');
+    const last = s6.i===s6.qs.length-1;
+    body.innerHTML = `<div class="msg" style="color:${s6.oneOk?'var(--less)':'var(--more)'}">${s6.oneOk?'Right!':'Not quite.'} ${sol.one?`Only ${sol.list[0]} works, so we circle it.`:'Lots of numbers work, so no circle.'}</div>
+      <div class="label">Every number that works</div><div class="answers">${ans}</div>
+      ${last ? `<p class="tip">Round done! You got ${s6.pts} out of ${s6.qs.length*2} points.</p><button class="go" id="new">New puzzles</button>`
+             : `<button class="go" id="nx">Next puzzle</button>`}`;
+    const nx=body.querySelector('#nx'); if(nx) nx.onclick=()=>{s6.i++; s6.val=null; s6.phase='pick'; render();};
+    const nw=body.querySelector('#new'); if(nw) nw.onclick=()=>{Object.assign(s6,{qs:makeRound(),i:0,val:null,phase:'pick',wrong:'',pts:0}); render();};
+  }
+  const words={'<':'is less than','=':'equals','>':'is more than'}[q.r];
+  return `${q.a} ${q.op==='+'?'plus':'minus'} blank ${words} ${q.t}. Pick a number that makes it true.`;
+}
+
+/* ---------- shell ---------- */
+const STEPS=[{n:'Blocks',f:step1},{n:'Hop',f:step2},{n:'Check',f:step3},{n:'Take away',f:step4},{n:'Puzzles',f:step5},{n:'Solve',f:step6}];
+let cur=0, sayText='', seen={0:1};
+try{ const c=+localStorage.getItem('oow-step'); if(c>=0&&c<STEPS.length){cur=c;} }catch(e){}
+function render(){
+  sayText = STEPS[cur].f($('#stage'));
+  $('#steps').innerHTML = STEPS.map((s,i)=>`<button class="${i===cur?'on':''} ${seen[i]&&i!==cur?'done':''}" data-i="${i}" aria-label="Step ${i+1}: ${s.n}"><b>${i+1}</b>${s.n}</button>`).join('');
+  $('#steps').querySelectorAll('button').forEach(b=>b.onclick=()=>go(+b.dataset.i));
+  $('#back').disabled = cur===0; $('#next').disabled = cur===STEPS.length-1;
+}
+function go(i){ cur=i; seen[i]=1; try{localStorage.setItem('oow-step',i)}catch(e){} try{speechSynthesis.cancel()}catch(e){} render(); window.scrollTo({top:0}); }
+$('#back').onclick=()=>go(cur-1);
+$('#next').onclick=()=>go(cur+1);
+$('#say').onclick=()=>speak(sayText);
+render();
+</script>
+</body>
+</html>

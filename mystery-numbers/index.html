@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mystery Numbers A and B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one puzzle card, two answer slots, a number pad, then a worked explanation */
+:root{
+  --bg:#EAF2F7; --card:#FFFFFF; --ink:#1B2B38; --muted:#5A6E7E; --line:#C9D8E3;
+  --blue:#2F7FD1; --orange:#F08A24; --good:#2E9E6A; --bad:#D2483F; --gold:#D99A00;
+  --good-soft:#DDF3E7; --bad-soft:#FBE1DE; --gold-soft:#FFF2C9; --blue-soft:#DCEBFA;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --good:#4CC28A; --bad:#F06A60; --gold:#F0B830;
+  --good-soft:#163828; --bad-soft:#3D1D1A; --gold-soft:#3A3010; --blue-soft:#17304A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --good:#4CC28A; --bad:#F06A60; --gold:#F0B830;
+  --good-soft:#163828; --bad-soft:#3D1D1A; --gold-soft:#3A3010; --blue-soft:#17304A; color-scheme:dark}
+body{margin:0;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:18px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+.app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:28px;margin:0;line-height:1}
+h1 span{color:var(--orange)}
+button{font-family:var(--display);font-weight:700;cursor:pointer;border:none;color:inherit}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.say{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px}
+.say svg{width:20px;height:20px}
+.bar{display:flex;gap:6px}
+.bar i{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.bar i.ok{background:var(--good)} .bar i.no{background:var(--bad)} .bar i.now{background:var(--blue)}
+.score{font-family:var(--display);font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+main{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.story{font-size:21px;font-weight:700;max-width:40ch;margin:0}
+.story b{font-family:var(--display);font-size:26px;color:var(--blue)}
+.story em{font-style:normal;font-family:var(--display);font-size:26px;color:var(--orange)}
+.slots{display:flex;gap:14px;flex-wrap:wrap}
+.slot{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:28px;background:var(--bg);border:3px solid var(--line);border-radius:16px;padding:6px 14px}
+.slot.on{border-color:var(--orange)}
+.slot span{min-width:44px;text-align:center;border-bottom:3px solid var(--muted);color:var(--orange);font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;max-width:460px}
+.pad button{height:50px;border-radius:12px;font-size:22px;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.go{font-size:20px;padding:10px 26px;border-radius:14px;background:var(--blue);color:#fff;align-self:flex-start}
+.go:disabled{opacity:.35;cursor:default}
+.verdict{font-family:var(--display);font-weight:800;font-size:24px;padding:6px 16px;border-radius:12px;align-self:flex-start}
+.v-ok{background:var(--good-soft);color:var(--good)} .v-no{background:var(--bad-soft);color:var(--bad)}
+.label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.explain{display:flex;flex-direction:column;gap:10px;border-top:2px dashed var(--line);padding-top:14px}
+.explain p{margin:0;max-width:60ch}
+.tbl{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0 4px;font-variant-numeric:tabular-nums;font-family:var(--display);font-size:20px}
+th{font-size:14px;color:var(--muted);text-align:left;padding:0 14px 0 10px;font-family:var(--body);text-transform:uppercase;letter-spacing:.05em}
+td{padding:4px 14px 4px 10px;font-weight:700}
+tr.hit td{background:var(--good-soft);color:var(--good);font-weight:800}
+tr.hit td:first-child{border-radius:10px 0 0 10px} tr.hit td:last-child{border-radius:0 10px 10px 0}
+.check{font-family:var(--display);font-weight:800;font-size:22px;color:var(--good)}
+.done{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.big{font-family:var(--display);font-weight:800;font-size:56px;line-height:1;color:var(--blue)}
+@media (max-width:480px){.pad{grid-template-columns:repeat(5,minmax(0,1fr))} .story{font-size:19px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Mystery Numbers <span>A</span> &amp; <span>B</span></h1>
+    <button class="say" id="say" aria-label="Read the puzzle out loud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>Read to me</button>
+  </header>
+  <div class="bar" id="bar"></div>
+  <div class="score" id="score"></div>
+  <main id="stage" aria-live="polite"></main>
+</div>
+
+<script>
+const N=10, $=s=>document.querySelector(s), rnd=n=>Math.floor(Math.random()*n);
+function makeRound(){
+  const out=[], seen=new Set();
+  while(out.length<N){
+    const b=1+rnd(5), a=b+1+rnd(6), s=a+b;
+    if(s>12||seen.has(a+','+b)) continue; seen.add(a+','+b); out.push({a,b,sum:s,diff:a-b});
+  }
+  return out;
+}
+let st={qs:makeRound(), i:0, A:null, B:null, slot:'A', checked:false, res:[]};
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.9;speechSynthesis.speak(u);}catch(e){}}
+
+function render(){
+  $('#bar').innerHTML = st.qs.map((_,k)=>`<i class="${st.res[k]===true?'ok':st.res[k]===false?'no':k===st.i?'now':''}"></i>`).join('');
+  const right = st.res.filter(x=>x).length;
+  if(st.i>=N){ $('#score').textContent=''; return done(right); }
+  $('#score').textContent = `Puzzle ${st.i+1} of ${N} · ${right} right`;
+  const q=st.qs[st.i];
+  const el=$('#stage');
+  el.innerHTML = `<p class="story">I thought of two numbers, <b>A</b> and <b>B</b>. A is the bigger one.<br>Their sum is <em>${q.sum}</em> and their difference is <em>${q.diff}</em>.<br>What are my numbers?</p>
+    <div class="slots">
+      <button class="slot ${st.slot==='A'&&!st.checked?'on':''}" data-s="A" aria-label="Answer for A">A = <span>${st.A??'&nbsp;'}</span></button>
+      <button class="slot ${st.slot==='B'&&!st.checked?'on':''}" data-s="B" aria-label="Answer for B">B = <span>${st.B??'&nbsp;'}</span></button>
+    </div>
+    <div id="work"></div>`;
+  el.querySelectorAll('.slot').forEach(b=>b.onclick=()=>{ if(st.checked) return; st.slot=b.dataset.s; render(); });
+  const w=el.querySelector('#work');
+  if(!st.checked){
+    let pad='<div class="pad">'; for(let n=0;n<=12;n++) pad+=`<button data-n="${n}">${n}</button>`; pad+='</div>';
+    w.innerHTML = pad+`<div style="height:12px"></div><button class="go" id="chk" ${st.A===null||st.B===null?'disabled':''}>Check</button>`;
+    w.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{
+      const n=+b.dataset.n; if(st.slot==='A'){st.A=n; if(st.B===null) st.slot='B';} else st.B=n; render(); });
+    w.querySelector('#chk').onclick=()=>{ st.checked=true; st.res[st.i]=(st.A===q.a&&st.B===q.b); render(); };
+  } else {
+    w.innerHTML = explain(q, st.res[st.i]);
+    w.querySelector('#nx').onclick=()=>{ st.i++; st.A=st.B=null; st.slot='A'; st.checked=false; render(); window.scrollTo({top:0}); };
+  }
+}
+
+function explain(q, ok){
+  let head = ok ? `<div class="verdict v-ok">Correct! A is ${q.a} and B is ${q.b}.</div>`
+    : `<div class="verdict v-no">Not quite. A is ${q.a} and B is ${q.b}.</div>`;
+  if(!ok){
+    const s=st.A+st.B, d=st.A-st.B, bits=[];
+    bits.push(`${st.A} + ${st.B} = ${s}${s===q.sum?' (that part is right)':`, but the sum should be ${q.sum}`}`);
+    bits.push(`${st.A} − ${st.B} = ${d}${d===q.diff?' (that part is right)':`, but the difference should be ${q.diff}`}`);
+    head += `<p>Your numbers: ${bits.join('. ')}.</p>`;
+  }
+  let rows='';
+  for(let a=q.sum;a>=Math.ceil(q.sum/2);a--){ const b=q.sum-a;
+    rows+=`<tr class="${a===q.a?'hit':''}"><td>${a} + ${b} = ${q.sum}</td><td>${a} − ${b} = ${a-b}</td><td>${a===q.a?'✓':''}</td></tr>`; }
+  return `${head}<div class="explain">
+    <div class="label">How to find it</div>
+    <p>List the pairs that add up to ${q.sum}. Then find the pair whose difference is ${q.diff}.</p>
+    <div class="tbl"><table><thead><tr><th>Sum</th><th>Difference</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="label">Check</div>
+    <div class="check">${q.a} + ${q.b} = ${q.sum} &nbsp;and&nbsp; ${q.a} − ${q.b} = ${q.diff}</div>
+    <button class="go" id="nx">${st.i===N-1?'See my score':'Next puzzle'}</button></div>`;
+}
+
+function done(right){
+  $('#stage').innerHTML = `<div class="done"><div class="label">Round finished</div>
+    <div class="big">${right} / ${N}</div>
+    <p style="margin:0">${right===N?'Perfect round!':right>=7?'Great work!':'Good practice. Try another round!'}</p>
+    <button class="go" id="again">New round</button></div>`;
+  $('#again').onclick=()=>{ st={qs:makeRound(),i:0,A:null,B:null,slot:'A',checked:false,res:[]}; render(); };
+}
+$('#say').onclick=()=>{ const q=st.qs[st.i]; if(!q) return speak('Round finished!');
+  speak(`I thought of two numbers, A and B. A is the bigger one. Their sum is ${q.sum} and their difference is ${q.diff}. What are my numbers?`); };
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Balance Scale Weights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: one balanced scale per puzzle, a number pad under it, then a worked explanation */
+:root{
+  --bg:#EAF2F7; --card:#FFFFFF; --ink:#1B2B38; --muted:#5A6E7E; --line:#C9D8E3;
+  --blue:#2F7FD1; --orange:#F08A24; --good:#2E9E6A; --bad:#D2483F; --brass:#B9A23A; --brass-dark:#8C7A22;
+  --good-soft:#DDF3E7; --bad-soft:#FBE1DE; --blue-soft:#DCEBFA;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --good:#4CC28A; --bad:#F06A60; --brass:#C9B24A; --brass-dark:#E0CB66;
+  --good-soft:#163828; --bad-soft:#3D1D1A; --blue-soft:#17304A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A22; --card:#182733; --ink:#E8F0F6; --muted:#9DB1C1; --line:#2C4252;
+  --blue:#5AA2EE; --orange:#F59B44; --good:#4CC28A; --bad:#F06A60; --brass:#C9B24A; --brass-dark:#E0CB66;
+  --good-soft:#163828; --bad-soft:#3D1D1A; --blue-soft:#17304A; color-scheme:dark}
+body{margin:0;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:18px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+.app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:28px;margin:0;line-height:1}
+h1 span{color:var(--blue)}
+button{font-family:var(--display);font-weight:700;cursor:pointer;border:none;color:inherit}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.say{display:flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px}
+.say svg{width:20px;height:20px}
+.bar{display:flex;gap:6px}
+.bar i{flex:1;height:10px;border-radius:5px;background:var(--line)}
+.bar i.ok{background:var(--good)} .bar i.no{background:var(--bad)} .bar i.now{background:var(--blue)}
+.score{font-family:var(--display);font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+main{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.ask{font-family:var(--display);font-weight:800;font-size:26px;margin:0;line-height:1.15}
+.scale svg{display:block;width:100%;max-width:440px;height:auto;margin:0 auto}
+.answer{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:800;font-size:28px}
+.answer svg{width:52px;height:52px;flex:none}
+.answer span{min-width:56px;text-align:center;border-bottom:3px solid var(--muted);color:var(--orange);font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;max-width:460px}
+.pad button{height:50px;border-radius:12px;font-size:22px;background:var(--blue-soft);border:2px solid var(--blue);color:var(--blue)}
+.pad button.picked{background:var(--orange);border-color:var(--orange);color:#fff}
+.go{font-size:20px;padding:10px 26px;border-radius:14px;background:var(--blue);color:#fff;align-self:flex-start}
+.go:disabled{opacity:.35;cursor:default}
+.verdict{font-family:var(--display);font-weight:800;font-size:24px;padding:6px 16px;border-radius:12px;align-self:flex-start}
+.v-ok{background:var(--good-soft);color:var(--good)} .v-no{background:var(--bad-soft);color:var(--bad)}
+.label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.explain{display:flex;flex-direction:column;gap:10px;border-top:2px dashed var(--line);padding-top:14px}
+.explain p{margin:0;max-width:60ch}
+.math{font-family:var(--display);font-weight:800;font-size:24px;font-variant-numeric:tabular-nums}
+.check{font-family:var(--display);font-weight:800;font-size:22px;color:var(--good)}
+.done{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.big{font-family:var(--display);font-weight:800;font-size:56px;line-height:1;color:var(--blue)}
+@media (max-width:480px){.pad{grid-template-columns:repeat(5,minmax(0,1fr))} .ask{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Balance <span>Scales</span></h1>
+    <button class="say" id="say" aria-label="Read the puzzle out loud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>Read to me</button>
+  </header>
+  <div class="bar" id="bar"></div>
+  <div class="score" id="score"></div>
+  <main id="stage" aria-live="polite"></main>
+</div>
+
+<script>
+const N=10, $=s=>document.querySelector(s), rnd=n=>Math.floor(Math.random()*n);
+const KINDS=[{k:'pumpkin',name:'pumpkin',plural:'pumpkins'},{k:'apple',name:'apple',plural:'apples'},{k:'gift',name:'gift box',plural:'gift boxes'}];
+
+/* ---- drawings (cx = centre, b = baseline) ---- */
+function objSVG(k,cx,b,label){
+  let s='';
+  if(k==='pumpkin'){
+    s=`<rect x="${cx-3}" y="${b-50}" width="6" height="12" rx="2" fill="#5E7B2E"/>
+       <ellipse cx="${cx-11}" cy="${b-21}" rx="13" ry="20" fill="#E8742A" stroke="#B4531A" stroke-width="2"/>
+       <ellipse cx="${cx+11}" cy="${b-21}" rx="13" ry="20" fill="#E8742A" stroke="#B4531A" stroke-width="2"/>
+       <ellipse cx="${cx}" cy="${b-21}" rx="12" ry="21" fill="#F08A30" stroke="#B4531A" stroke-width="2"/>`;
+  } else if(k==='apple'){
+    s=`<path d="M${cx} ${b-38} q2 -8 6 -11" stroke="#6B4A2A" stroke-width="3" fill="none" stroke-linecap="round"/>
+       <ellipse cx="${cx+9}" cy="${b-46}" rx="7" ry="4" fill="#4E9A3A" transform="rotate(-25 ${cx+9} ${b-46})"/>
+       <path d="M${cx} ${b-36} c-12 -8 -24 0 -22 14 c2 14 12 22 22 20 c10 2 20 -6 22 -20 c2 -14 -10 -22 -22 -14z" fill="#D9393E" stroke="#A3252A" stroke-width="2"/>`;
+  } else {
+    s=`<rect x="${cx-21}" y="${b-38}" width="42" height="38" rx="4" fill="#7E62C8" stroke="#5A4499" stroke-width="2"/>
+       <rect x="${cx-4}" y="${b-38}" width="8" height="38" fill="#F2C94C"/>
+       <path d="M${cx} ${b-38} c-10 -12 -18 -4 -10 2 M${cx} ${b-38} c10 -12 18 -4 10 2" stroke="#F2C94C" stroke-width="4" fill="none"/>`;
+  }
+  if(label!=null) s+=`<circle cx="${cx+18}" cy="${b-46}" r="13" fill="var(--orange)"/><text x="${cx+18}" y="${b-40}" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="16" fill="#fff">${label}</text>`;
+  return s;
+}
+function weightSVG(v,x,b){
+  return `<rect x="${x+11}" y="${b-50}" width="20" height="18" rx="9" fill="none" stroke="var(--blue)" stroke-width="5"/>
+    <path d="M${x+4} ${b-36} h34 l4 36 h-42z" fill="var(--blue)"/>
+    <text x="${x+21}" y="${b-10}" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="20" fill="#fff">${v}</text>`;
+}
+function panItems(items,cx,b,kind,label){
+  const W=it=>it.t==='w'?42:48, gap=6;
+  const total=items.reduce((s,it)=>s+W(it),0)+gap*(items.length-1);
+  let x=cx-total/2, s='';
+  for(const it of items){ s+= it.t==='w' ? weightSVG(it.v,x,b) : objSVG(kind,x+24,b,label); x+=W(it)+gap; }
+  return s;
+}
+function scaleSVG(q,label){
+  const L=q.left, R=q.right;
+  return `<svg viewBox="0 0 360 200" role="img" aria-label="A balanced scale">
+    <path d="M168 196 h24 l-6 -50 h-12z" fill="var(--brass)"/>
+    <rect x="140" y="192" width="80" height="6" rx="3" fill="var(--brass-dark)"/>
+    <rect x="40" y="146" width="280" height="8" rx="4" fill="var(--brass)"/>
+    <circle cx="180" cy="150" r="7" fill="var(--brass-dark)"/>
+    <rect x="93" y="124" width="5" height="24" fill="var(--brass-dark)"/><rect x="262" y="124" width="5" height="24" fill="var(--brass-dark)"/>
+    <path d="M22 116 h146 q-6 12 -16 12 h-114 q-10 0 -16 -12z" fill="var(--brass)"/>
+    <path d="M192 116 h146 q-6 12 -16 12 h-114 q-10 0 -16 -12z" fill="var(--brass)"/>
+    ${panItems(L,95,116,q.kind.k,label)}${panItems(R,265,116,q.kind.k,label)}
+  </svg>`;
+}
+
+/* ---- puzzles ---- */
+function makeQ(){
+  const kind=KINDS[rnd(3)], r=Math.random(); let q;
+  if(r<.25){ let a,b; do{a=1+rnd(7);b=1+rnd(7);}while(a+b>12); q={type:1,x:a+b,obj:[{t:'o'}],oth:[{t:'w',v:a},{t:'w',v:b}]}; }
+  else if(r<.6){ const W=4+rnd(9), w=1+rnd(W-1); q={type:2,x:W-w,w,W,obj:[{t:'o'},{t:'w',v:w}],oth:[{t:'w',v:W}]}; }
+  else if(r<.85){ let a,b; do{a=1+rnd(7);b=1+rnd(7);}while(a+b>12||a+b<3); const S=a+b, w=1+rnd(S-1);
+    q={type:3,x:S-w,w,a,b,S,obj:[{t:'o'},{t:'w',v:w}],oth:[{t:'w',v:a},{t:'w',v:b}]}; }
+  else { const x=1+rnd(6); q={type:4,x,W:2*x,obj:[{t:'o'},{t:'o'}],oth:[{t:'w',v:2*x}]}; }
+  q.kind=kind;
+  const flip=rnd(2)===1; q.left=flip?q.oth:q.obj; q.right=flip?q.obj:q.oth;
+  return q;
+}
+function makeRound(){ return Array.from({length:N},makeQ); }
+let st={qs:makeRound(), i:0, val:null, checked:false, res:[]};
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.9;speechSynthesis.speak(u);}catch(e){}}
+
+function render(){
+  $('#bar').innerHTML = st.qs.map((_,k)=>`<i class="${st.res[k]===true?'ok':st.res[k]===false?'no':k===st.i?'now':''}"></i>`).join('');
+  const right=st.res.filter(x=>x).length;
+  if(st.i>=N){ $('#score').textContent=''; return done(right); }
+  $('#score').textContent=`Puzzle ${st.i+1} of ${N} · ${right} right`;
+  const q=st.qs[st.i], nm=q.kind.name;
+  const el=$('#stage');
+  el.innerHTML = `<p class="ask">The scale is balanced. How much does one ${nm} weigh?</p>
+    <div class="scale">${scaleSVG(q, st.checked?q.x:null)}</div>
+    <div class="answer"><svg viewBox="0 0 56 56">${objSVG(q.kind.k,28,54,null)}</svg> = <span>${st.val??'&nbsp;'}</span></div>
+    <div id="work"></div>`;
+  const w=el.querySelector('#work');
+  if(!st.checked){
+    let pad='<div class="pad">'; for(let n=0;n<=12;n++) pad+=`<button data-n="${n}" class="${st.val===n?'picked':''}">${n}</button>`; pad+='</div>';
+    w.innerHTML = pad+`<div style="height:12px"></div><button class="go" id="chk" ${st.val===null?'disabled':''}>Check</button>`;
+    w.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{st.val=+b.dataset.n; render();});
+    w.querySelector('#chk').onclick=()=>{ st.checked=true; st.res[st.i]=(st.val===q.x); render(); };
+  } else {
+    w.innerHTML = explain(q, st.res[st.i]);
+    w.querySelector('#nx').onclick=()=>{ st.i++; st.val=null; st.checked=false; render(); window.scrollTo({top:0}); };
+  }
+}
+
+function explain(q,ok){
+  const nm=q.kind.name, pl=q.kind.plural, v=st.val;
+  let head = ok ? `<div class="verdict v-ok">Correct! The ${nm} weighs ${q.x}.</div>`
+                : `<div class="verdict v-no">Not quite. The ${nm} weighs ${q.x}.</div>`;
+  let steps='', check='', why='';
+  if(q.type===1){
+    steps=`<p>A balanced scale means both sides weigh the same. Add up the weights on the other side.</p><div class="math">${q.oth[0].v} + ${q.oth[1].v} = ${q.x}</div><p>So the ${nm} weighs ${q.x}.</p>`;
+    check=`${q.x} = ${q.oth[0].v} + ${q.oth[1].v}`;
+    why=`If the ${nm} weighed ${v}, its side would weigh ${v}, but the other side weighs ${q.x}.`;
+  } else if(q.type===2){
+    steps=`<p>Both sides weigh the same. The ${nm} and the ${q.w} together weigh ${q.W}. Take the ${q.w} away to find the ${nm}.</p><div class="math">${q.W} − ${q.w} = ${q.x}</div>`;
+    check=`${q.x} + ${q.w} = ${q.W}`;
+    why=`If the ${nm} weighed ${v}, its side would weigh ${v} + ${q.w} = ${v+q.w}, not ${q.W}.`;
+  } else if(q.type===3){
+    steps=`<p>First add up the side with two weights.</p><div class="math">${q.a} + ${q.b} = ${q.S}</div><p>The ${nm} and the ${q.w} together weigh ${q.S}. Take the ${q.w} away.</p><div class="math">${q.S} − ${q.w} = ${q.x}</div>`;
+    check=`${q.x} + ${q.w} = ${q.a} + ${q.b}`;
+    why=`If the ${nm} weighed ${v}, its side would weigh ${v} + ${q.w} = ${v+q.w}, but the other side weighs ${q.S}.`;
+  } else {
+    steps=`<p>Two ${pl} weigh ${q.W} together. They are the same, so split ${q.W} into two equal parts.</p><div class="math">${q.x} + ${q.x} = ${q.W}</div>`;
+    check=`${q.x} + ${q.x} = ${q.W}`;
+    why=`If one ${nm} weighed ${v}, two would weigh ${v} + ${v} = ${2*v}, not ${q.W}.`;
+  }
+  return `${head}${ok?'':`<p>${why}</p>`}<div class="explain"><div class="label">How to find it</div>${steps}
+    <div class="label">Check</div><div class="check">${check} ✓</div>
+    <button class="go" id="nx">${st.i===N-1?'See my score':'Next puzzle'}</button></div>`;
+}
+
+function done(right){
+  $('#stage').innerHTML=`<div class="done"><div class="label">Round finished</div><div class="big">${right} / ${N}</div>
+    <p style="margin:0">${right===N?'Perfect round!':right>=7?'Great work!':'Good practice. Try another round!'}</p>
+    <button class="go" id="again">New round</button></div>`;
+  $('#again').onclick=()=>{ st={qs:makeRound(),i:0,val:null,checked:false,res:[]}; render(); };
+}
+$('#say').onclick=()=>{ const q=st.qs[st.i]; if(!q) return speak('Round finished!');
+  const side=a=>a.map(it=>it.t==='w'?`a ${it.v}`:`a ${q.kind.name}`).join(' and ');
+  speak(`The scale is balanced. One side has ${side(q.left)}. The other side has ${side(q.right)}. How much does one ${q.kind.name} weigh?`); };
+render();
+</script>
+</body>
+</html>
