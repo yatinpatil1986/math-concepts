@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pattern Grid Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: warm, encouraging, a workbook page a 6-year-old can work alone.
+   IDEA: the RSM workbook page itself — orange spine, white paper, blue printed ink, pencil answers.
+   PICTURE: the big 3x3 puzzle grid, kid's answers appear in pencil grey, turn green when right.
+   COLOUR and TYPE: paper white, workbook orange, print blue, pencil graphite; Andika (made for early readers).
+   LAYOUT: title strip, grid, then a big tap-palette (shape / picture / line) and Check. Stacks on phone. */
+:root{color-scheme:light dark;
+ --bg:light-dark(#f3e9dc,#1b1a22);--paper:light-dark(#ffffff,#26252f);--ink:light-dark(#1f2430,#eef0f5);
+ --soft:light-dark(#6b6f7a,#a9adb8);--blue:light-dark(#1f5fae,#7fb0ff);--orange:#e8772e;
+ --pencil:light-dark(#4b4b4b,#d6d6d6);--good:light-dark(#1d8a4a,#5fd48f);--bad:light-dark(#c2410c,#ff9a6b);
+ --line:light-dark(#9a9ea8,#5a5d69);--hl:light-dark(#fff4c2,#3d3a22);--sel:light-dark(#fde2cc,#4a3324)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 Andika,"Comic Sans MS",system-ui,sans-serif;overflow-x:clip}
+.page{max-width:1040px;margin:0 auto;padding:clamp(14px,3vw,32px) max(4vw,12px) 40px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(16px,3vw,36px);align-items:start}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.badge{background:var(--orange);color:#fff;font-weight:700;border-radius:0 22px 22px 0;padding:6px 16px 6px 12px;font-size:20px}
+h1{font-size:clamp(26px,4.5vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+.stars{margin-left:auto;font-weight:700;font-size:20px;color:var(--orange);white-space:nowrap}
+.sheet{background:var(--paper);border-radius:14px;padding:clamp(12px,2.5vw,22px);box-shadow:0 1px 0 rgba(0,0,0,.05),0 10px 30px -14px rgba(60,40,10,.35);border-left:14px solid var(--orange)}
+.ask{margin:0 0 12px;font-size:19px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:2.5px solid var(--line);border-radius:12px;overflow:hidden;aspect-ratio:1}
+.cell{position:relative;border:0;border-right:1.5px solid var(--line);border-bottom:1.5px solid var(--line);background:transparent;padding:0;cursor:default;color:var(--blue)}
+.cell:nth-child(3n){border-right:0}.cell:nth-child(n+7){border-bottom:0}
+.cell svg{width:100%;height:100%;display:block}
+.cell.blank{cursor:pointer;color:var(--pencil)}
+.cell.blank::after{content:"";position:absolute;inset:8%;border:2px dashed transparent;border-radius:10px}
+.cell.blank.empty::after{border-color:var(--line)}
+.cell.hl{background:var(--hl)}
+.cell.sel{background:var(--sel)}.cell.sel::after{border-color:var(--orange)!important;border-style:solid}
+.cell.right{color:var(--good)}.cell.wrong::after{border-color:var(--bad)!important;border-style:solid}
+.cell:focus-visible{outline:3px solid var(--orange);outline-offset:-3px}
+.mark{position:absolute;top:4%;right:6%;font-weight:700;font-size:clamp(16px,3vw,24px)}
+.right .mark{color:var(--good)}.wrong .mark{color:var(--bad)}
+.side{display:grid;gap:14px}
+.group h2{font-size:17px;margin:0 0 6px;color:var(--soft);font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.opt{background:var(--paper);border:2.5px solid var(--line);border-radius:14px;min-height:72px;padding:6px;cursor:pointer;color:var(--ink);font:inherit;font-size:14px;display:grid;justify-items:center;gap:2px}
+.opt svg{width:56px;height:56px}
+.opt[aria-pressed=true]{border-color:var(--orange);background:var(--sel)}
+.opt:disabled{opacity:.4;cursor:not-allowed}
+.opt:focus-visible,.btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:inherit;font-weight:700;font-size:17px;min-height:48px;padding:8px 18px;border-radius:999px;border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.go{background:var(--orange);border-color:var(--orange);color:#fff;flex:1 1 140px}
+.btn.lvl[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.msg{min-height:3.2em;margin:0;padding:10px 14px;border-radius:12px;background:var(--paper);border:2px solid var(--line);font-size:18px}
+.msg.good{border-color:var(--good)}.msg.bad{border-color:var(--bad)}
+.note{font-size:14px;color:var(--soft);margin:0}
+.party{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04) rotate(-1deg)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.party{animation:none}}
+@media(max-width:720px){.page{grid-template-columns:minmax(0,1fr)}.opt svg{width:40px;height:40px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <span class="badge" id="num">1</span>
+    <h1>Find the pattern</h1>
+    <span class="stars" id="stars">★ 0</span>
+  </header>
+
+  <section class="sheet" id="sheet">
+    <p class="ask">Draw the missing shapes. Tap an empty box, then pick.</p>
+    <div class="grid" id="grid" role="grid" aria-label="Pattern grid"></div>
+  </section>
+
+  <section class="side">
+    <div class="row" role="group" aria-label="Level">
+      <button class="btn lvl" data-k="2">Easy</button>
+      <button class="btn lvl" data-k="3">Medium</button>
+      <button class="btn lvl" data-k="5">Hard</button>
+      <button class="btn lvl" data-k="book">Book page</button>
+    </div>
+    <div class="group"><h2>1. Shape</h2><div class="opts" id="o-s"></div></div>
+    <div class="group"><h2>2. Picture inside</h2><div class="opts" id="o-i"></div></div>
+    <div class="group"><h2>3. Line</h2><div class="opts" id="o-l"></div></div>
+    <p class="msg" id="msg" aria-live="polite">Look at each row and each column. What is missing?</p>
+    <div class="row">
+      <button class="btn go" id="check">Check ✓</button>
+      <button class="btn" id="hint">Hint</button>
+      <button class="btn" id="next">New puzzle</button>
+    </div>
+    <p class="note">Every puzzle has exactly one right answer. Shapes and pictures never repeat in a row or column; lines follow a row, a column, or never repeat.</p>
+  </section>
+</div>
+
+<script>
+{
+const SH=['square','circle','triangle'], IN=['moon','sun','cloud'], LN=['dotted','solid','dashed'];
+const DASH=['0.1 7','', '9 6'];
+
+// ---- drawing ----
+function outer(s,l){
+  const d=DASH[l]?`stroke-dasharray="${DASH[l]}"`:'';
+  const a=`fill="none" stroke="currentColor" stroke-width="${l===0?4:3}" stroke-linecap="round" stroke-linejoin="round" ${d}`;
+  if(s===0) return `<rect x="20" y="20" width="60" height="60" ${a}/>`;
+  if(s===1) return `<circle cx="50" cy="50" r="31" ${a}/>`;
+  return `<polygon points="50,15 86,81 14,81" ${a}/>`;
+}
+function inner(i,s){
+  const t= s===2 ? 'translate(50 60) scale(.9)' : 'translate(50 50) scale(1.15)';
+  const a='fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"';
+  let g;
+  if(i===0) g=`<path d="M7.5,-13 A15,15 0 1,0 7.5,13 A14,14 0 0,1 7.5,-13Z" ${a}/>`;
+  else if(i===1){let r='';for(let k=0;k<10;k++){const q=k*Math.PI/5,c=Math.cos(q),n=Math.sin(q);r+=`M${(c*11).toFixed(1)},${(n*11).toFixed(1)}L${(c*16).toFixed(1)},${(n*16).toFixed(1)}`}
+    g=`<circle r="7.5" ${a}/><path d="${r}" ${a}/>`}
+  else g=`<path d="M-15,8 H14 A7,7 0 0,0 12,-4 A9,9 0 0,0 -3,-9 A8,8 0 0,0 -15,-1 A4.6,4.6 0 0,0 -15,8Z" ${a}/>`;
+  return `<g transform="${t}">${g}</g>`;
+}
+const svg=(body)=>`<svg viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
+function draw(c){let b='';if(c.l!=null&&c.s!=null)b+=outer(c.s,c.l);else if(c.s!=null)b+=outer(c.s,1).replace('stroke-width="3"','stroke-width="3" opacity=".35"');
+  if(c.i!=null)b+=inner(c.i,c.s??1);return svg(b)}
+
+// ---- pattern maths ----
+const ALL=[];
+for(let n=0;n<19683;n++){const g=[];let x=n;for(let k=0;k<9;k++){g.push(x%3);x=Math.floor(x/3)}ALL.push(g)}
+const distinct=a=>new Set(a).size===3;
+const isLatin=g=>[0,1,2].every(r=>distinct([g[r*3],g[r*3+1],g[r*3+2]]))&&[0,1,2].every(c=>distinct([g[c],g[c+3],g[c+6]]));
+const isCol=g=>distinct(g.slice(0,3))&&g.every((v,k)=>v===g[k%3]);
+const isRow=g=>distinct([g[0],g[3],g[6]])&&g.every((v,k)=>v===g[k-k%3]);
+const LAT=ALL.filter(isLatin), COL=ALL.filter(isCol), ROW=ALL.filter(isRow);
+const CANDS=[...LAT,...COL,...ROW];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a};
+function unique(g,hid){let n=0;for(const c of CANDS){if(c.every((v,k)=>hid.has(k)||v===g[k])){n++;if(n>1)return false}}return n===1}
+function ruleOf(g){return isCol(g)?'col':isRow(g)?'row':'latin'}
+
+function makePuzzle(k){
+  if(k==='book'){
+    const s=[0,1,2, 2,0,1, 1,2,0], i=[0,1,2, 1,2,0, 2,0,1], l=[0,1,2, 0,1,2, 0,1,2];
+    return {s,i,l,hid:new Set([1,2,6])};
+  }
+  for(let t=0;t<400;t++){
+    const s=pick(LAT), i=pick(LAT), l=pick(Math.random()<.45?COL:Math.random()<.5?ROW:LAT);
+    for(let u=0;u<60;u++){
+      const hid=new Set(shuffle([0,1,2,3,4,5,6,7,8]).slice(0,k));
+      if(unique(s,hid)&&unique(i,hid)&&unique(l,hid)) return {s,i,l,hid};
+    }
+  }
+  return makePuzzle('book');
+}
+
+// ---- state ----
+let P, ans, sel, done, lvl='book', hintStep=0, tries=0, stars=0, count=0;
+try{stars=+localStorage.getItem('pg-stars')||0;lvl=localStorage.getItem('pg-lvl')||'book'}catch(e){}
+const $=id=>document.getElementById(id);
+const grid=$('grid'), msg=$('msg');
+
+function say(t,cls=''){msg.textContent=t;msg.className='msg '+cls}
+
+function newPuzzle(){
+  P=makePuzzle(lvl==='book'?'book':+lvl);ans={};done=new Set();tries=0;hintStep=0;
+  sel=[...P.hid][0];count++;$('num').textContent=lvl==='book'?'13':count;
+  document.querySelectorAll('.lvl').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===String(lvl)));
+  say(lvl==='book'?'This is the page from the book. Can you solve it?':'Look at each row and each column. What is missing?');
+  render();
+}
+
+function render(){
+  const row=Math.floor(sel/3), col=sel%3;
+  grid.innerHTML=[...Array(9)].map((_,k)=>{
+    const blank=P.hid.has(k);
+    const c=blank?(ans[k]||{}):{s:P.s[k],i:P.i[k],l:P.l[k]};
+    const empty=blank&&c.s==null&&c.i==null;
+    const cls=['cell',blank&&'blank',empty&&'empty',blank&&k===sel&&!done.has(k)&&'sel',
+      sel!=null&&hintStep>0&&k!==sel&&(Math.floor(k/3)===row||k%3===col)&&'hl',
+      done.has(k)&&'right',blank&&c.wrong&&'wrong'].filter(Boolean).join(' ');
+    const label=blank?(done.has(k)?'Solved box':'Empty box, tap to fill'):`${LN[c.l]} ${SH[c.s]} with ${IN[c.i]}`;
+    const m=done.has(k)?'<span class="mark">✓</span>':c.wrong?'<span class="mark">?</span>':'';
+    return `<button class="${cls}" data-k="${k}" role="gridcell" aria-label="${label}" ${blank&&!done.has(k)?'':'tabindex="-1"'}>${draw(c)}${m}</button>`;
+  }).join('');
+  const cur=ans[sel]||{}, locked=done.has(sel)||!P.hid.has(sel);
+  const opt=(key,n,names,pic)=>names.map((nm,v)=>`<button class="opt" data-a="${key}" data-v="${v}" aria-pressed="${cur[key]===v}" ${locked?'disabled':''}>${svg(pic(v))}<span>${nm}</span></button>`).join('');
+  $('o-s').innerHTML=opt('s',3,SH,v=>outer(v,1));
+  $('o-i').innerHTML=opt('i',3,IN,v=>inner(v,1).replace('translate(50 50) scale(1.15)','translate(50 50) scale(1.9)'));
+  $('o-l').innerHTML=opt('l',3,LN,v=>`<line x1="12" y1="50" x2="88" y2="50" stroke="currentColor" stroke-width="${v===0?6:4.5}" stroke-linecap="round" ${DASH[v]?`stroke-dasharray="${v===0?'0.1 12':'16 10'}"`:''}/>`);
+  $('stars').textContent='★ '+stars;
+}
+
+grid.addEventListener('click',e=>{
+  const b=e.target.closest('.cell');if(!b)return;const k=+b.dataset.k;
+  if(!P.hid.has(k)||done.has(k))return;sel=k;hintStep=0;render();
+});
+document.querySelector('.side').addEventListener('click',e=>{
+  const o=e.target.closest('.opt');if(o&&!o.disabled){
+    const a=o.dataset.a,v=+o.dataset.v;ans[sel]=ans[sel]||{};ans[sel][a]=v;delete ans[sel].wrong;render();return}
+  const L=e.target.closest('.lvl');if(L){lvl=L.dataset.k;try{localStorage.setItem('pg-lvl',lvl)}catch(_){}newPuzzle()}
+});
+
+$('check').addEventListener('click',()=>{
+  const open=[...P.hid].filter(k=>!done.has(k));
+  const unfilled=open.filter(k=>{const a=ans[k]||{};return a.s==null||a.i==null||a.l==null});
+  if(unfilled.length){sel=unfilled[0];render();say('Fill in all the empty boxes first: shape, picture and line.');return}
+  tries++;let wrongs=[];
+  for(const k of open){const a=ans[k];
+    const bad=['s','i','l'].filter(x=>a[x]!==P[x][k]);
+    if(!bad.length){done.add(k);delete a.wrong}else{a.wrong=true;wrongs.push([k,bad])}}
+  if(!wrongs.length){
+    stars++;try{localStorage.setItem('pg-stars',stars)}catch(_){}
+    say(tries===1?'Perfect! You found the pattern! ★':'You did it! Great thinking! ★','good');
+    render();const sh=$('sheet');sh.classList.remove('party');void sh.offsetWidth;sh.classList.add('party');return}
+  const [k,bad]=wrongs[0];sel=k;hintStep=0;
+  const words={s:'shape',i:'picture',l:'line'};
+  say(`Almost! Check the ${bad.map(x=>words[x]).join(' and the ')} in the box with the "?".`,'bad');
+  render();
+});
+
+$('hint').addEventListener('click',()=>{
+  if(sel==null||done.has(sel)){say('Tap an empty box first.');return}
+  hintStep=hintStep%3+1;
+  const keys=['s','i','l'][hintStep-1], names=[SH,IN,LN][hintStep-1], word=['shape','picture','line'][hintStep-1];
+  const r=ruleOf(P[keys]);
+  const t= r==='latin' ? `Look at the yellow row and column. Each ${word} comes only once. Which ${word} is missing?`
+    : r==='col' ? `Look down the yellow column. Every box in a column has the same ${word}.`
+    : `Look across the yellow row. Every box in a row has the same ${word}.`;
+  say(`Hint ${hintStep}/3 · ${t}`);render();
+});
+$('next').addEventListener('click',()=>{if(lvl==='book'){lvl='2'}newPuzzle()});
+document.addEventListener('keydown',e=>{
+  if(!P||!['ArrowLeft','ArrowRight'].includes(e.key)||e.target.closest('.opt'))return;
+  const open=[...P.hid].filter(k=>!done.has(k)).sort((a,b)=>a-b);if(!open.length)return;
+  const i=open.indexOf(sel);sel=open[(i+(e.key==='ArrowRight'?1:open.length-1))%open.length];render();
+});
+
+newPuzzle();
+}
+</script>
+</body>
+</html>
